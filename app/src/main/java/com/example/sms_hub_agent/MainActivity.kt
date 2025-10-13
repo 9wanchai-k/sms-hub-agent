@@ -181,6 +181,21 @@ fun MainScreen() {
 
             OutlinedButton(
                 onClick = {
+                    context.startActivity(Intent(context, HistoryActivity::class.java))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                Icon(Icons.Default.History, "History")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("View History", style = MaterialTheme.typography.titleMedium)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedButton(
+                onClick = {
                     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = Uri.fromParts("package", context.packageName, null)
                     }

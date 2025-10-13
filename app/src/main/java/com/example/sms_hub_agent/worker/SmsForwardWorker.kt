@@ -5,7 +5,10 @@ import android.os.Build
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.sms_hub_agent.data.AppDatabase
+import com.example.sms_hub_agent.data.SmsHistory
 import com.example.sms_hub_agent.model.SmsPayload
+import com.example.sms_hub_agent.repository.HistoryRepository
 import com.example.sms_hub_agent.repository.SettingsRepository
 import com.example.sms_hub_agent.service.WebhookService
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +24,9 @@ class SmsForwardWorker(
 
     private val settingsRepository = SettingsRepository(context)
     private val webhookService = WebhookService()
+    private val historyRepository = HistoryRepository(
+        AppDatabase.getDatabase(context).smsHistoryDao()
+    )
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         Log.d(TAG, "Starting SMS forward work...")
@@ -54,6 +60,7 @@ class SmsForwardWorker(
             var success = false
             var attempts = 0
             val maxAttempts = settings.retryCount
+            var lastError: String? = null
 
             while (!success && attempts < maxAttempts) {
                 attempts++
@@ -61,17 +68,35 @@ class SmsForwardWorker(
 
                 success = webhookService.sendSmsToWebhook(payload, settings)
 
-                if (!success && attempts < maxAttempts) {
-                    // Exponential backoff: wait before retry
-                    val delayMs = (1000L * (1 shl (attempts - 1))).coerceAtMost(30000L)
-                    Log.d(TAG, "Retrying in ${delayMs}ms...")
-                    kotlinx.coroutines.delay(delayMs)
+                if (!success) {
+                    lastError = "Failed after $attempts attempt(s)"
+                    if (attempts < maxAttempts) {
+                        // Exponential backoff: wait before retry
+                        val delayMs = (1000L * (1 shl (attempts - 1))).coerceAtMost(30000L)
+                        Log.d(TAG, "Retrying in ${delayMs}ms...")
+                        kotlinx.coroutines.delay(delayMs)
+                    }
                 }
             }
 
+            // Save to history
+            val forwardedAt = System.currentTimeMillis()
+            val historyEntry = SmsHistory(
+                sender = sender,
+                message = message,
+                timestamp = timestamp,
+                device = Build.MODEL,
+                osVersion = Build.VERSION.SDK_INT,
+                forwardedAt = forwardedAt,
+                status = if (success) "success" else "failed",
+                errorMessage = if (!success) lastError else null,
+                webhookUrl = settings.webhookUrl
+            )
+            historyRepository.insert(historyEntry)
+
             if (success) {
                 // Save last forward time
-                settingsRepository.saveLastForwardTime(System.currentTimeMillis())
+                settingsRepository.saveLastForwardTime(forwardedAt)
                 Log.i(TAG, "SMS forwarded successfully")
                 Result.success()
             } else {
