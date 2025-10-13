@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "SMS Hub Agent Webhook Payload",
+  "description": "JSON Schema for SMS webhook payload sent by SMS Hub Agent to external endpoints",
+  "version": "1.0.0",
+  "required": [
+    "type",
+    "sender",
+    "message",
+    "timestamp",
+    "device",
+    "osVersion"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["sms"],
+      "description": "Message type identifier, always 'sms' for SMS messages"
+    },
+    "sender": {
+      "type": "string",
+      "pattern": "^\\+[1-9]\\d{1,14}$",
+      "description": "Sender phone number in E.164 international format",
+      "examples": ["+66812345678", "+12025551234", "+447911123456"]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1600,
+      "description": "Complete SMS message content as received by the device",
+      "examples": ["OTP: 123456", "Your verification code is 789012"]
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Unix timestamp in milliseconds when SMS was received by the device",
+      "examples": [1728799999000, 1640995200000]
+    },
+    "device": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Device model name as reported by Android Build.MODEL",
+      "examples": ["Pixel 7", "SM-G998B", "iPhone 14 Pro"]
+    },
+    "osVersion": {
+      "type": "integer",
+      "minimum": 21,
+      "maximum": 50,
+      "description": "Android API level (SDK version) of the device",
+      "examples": [33, 34, 31]
+    },
+    "appVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$",
+      "description": "SMS Hub Agent application version in semantic versioning format",
+      "examples": ["1.0.0", "1.2.3-beta", "2.0.0-rc1"]
+    },
+    "messageId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this message (UUID v4)",
+      "examples": ["550e8400-e29b-41d4-a716-446655440000"]
+    },
+    "receivedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when SMS was received (optional, alternative to timestamp)",
+      "examples": ["2023-10-13T14:30:00.000Z"]
+    },
+    "simSlot": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "SIM card slot number for dual-SIM devices (optional)",
+      "examples": [0, 1]
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "type": "sms",
+      "sender": "+66812345678",
+      "message": "Your OTP code is 123456. Valid for 5 minutes.",
+      "timestamp": 1728799999000,
+      "device": "Pixel 7",
+      "osVersion": 34,
+      "appVersion": "1.0.0",
+      "messageId": "550e8400-e29b-41d4-a716-446655440000"
+    },
+    {
+      "type": "sms",
+      "sender": "+12025551234",
+      "message": "Welcome to our service! Your account has been activated.",
+      "timestamp": 1728800123000,
+      "device": "SM-G998B",
+      "osVersion": 33,
+      "appVersion": "1.0.0",
+      "messageId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+      "receivedAt": "2023-10-13T14:35:23.000Z",
+      "simSlot": 0
+    }
+  ]
+}
+

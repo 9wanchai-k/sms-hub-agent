@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "SMS Hub Agent Configuration Schema",
+  "description": "JSON Schema for SMS Hub Agent application configuration settings",
+  "version": "1.0.0",
+  "required": [
+    "webhookUrl",
+    "enableAuth",
+    "enableHmac"
+  ],
+  "properties": {
+    "webhookUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://",
+      "description": "HTTPS webhook endpoint URL where SMS data will be sent",
+      "examples": [
+        "https://api.example.com/webhook",
+        "https://your-domain.com/sms-receiver"
+      ]
+    },
+    "enableAuth": {
+      "type": "boolean",
+      "description": "Enable HTTP Basic Authentication for webhook requests",
+      "default": false
+    },
+    "authUsername": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Basic authentication username (required if enableAuth is true)",
+      "examples": ["api_user", "webhook_client"]
+    },
+    "authPassword": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Basic authentication password (required if enableAuth is true)"
+    },
+    "enableHmac": {
+      "type": "boolean",
+      "description": "Enable HMAC-SHA256 signature generation for request integrity",
+      "default": false
+    },
+    "hmacSecret": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 512,
+      "description": "HMAC secret key for signature generation (required if enableHmac is true)",
+      "examples": ["your-secret-key-here", "super-secure-hmac-secret-2023"]
+    },
+    "retryAttempts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 3,
+      "description": "Number of retry attempts for failed webhook calls"
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 60,
+      "default": 30,
+      "description": "HTTP request timeout in seconds"
+    },
+    "enableQueue": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable offline message queuing when network is unavailable"
+    },
+    "maxQueueSize": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 1000,
+      "default": 100,
+      "description": "Maximum number of messages to queue when offline"
+    },
+    "enableLogging": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable application logging for debugging and monitoring"
+    },
+    "logLevel": {
+      "type": "string",
+      "enum": ["DEBUG", "INFO", "WARN", "ERROR"],
+      "default": "INFO",
+      "description": "Logging level for application events"
+    },
+    "customHeaders": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Custom HTTP headers to include with webhook requests",
+      "examples": [
+        {
+          "X-API-Version": "v1",
+          "X-Client-ID": "sms-hub-agent"
+        }
+      ]
+    },
+    "filterRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sender", "content", "regex"]
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["include", "exclude"]
+          }
+        },
+        "required": ["type", "pattern", "action"]
+      },
+      "description": "Rules for filtering which SMS messages to forward"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "enableAuth": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": ["authUsername", "authPassword"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "enableHmac": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": ["hmacSecret"]
+      }
+    }
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "webhookUrl": "https://api.example.com/webhook",
+      "enableAuth": true,
+      "authUsername": "api_user",
+      "authPassword": "secure_password_123",
+      "enableHmac": true,
+      "hmacSecret": "your-super-secret-key-2023",
+      "retryAttempts": 3,
+      "timeoutSeconds": 30,
+      "enableQueue": true,
+      "maxQueueSize": 100,
+      "enableLogging": true,
+      "logLevel": "INFO",
+      "customHeaders": {
+        "X-API-Version": "v1",
+        "X-Client-ID": "sms-hub-agent"
+      },
+      "filterRules": [
+        {
+          "type": "sender",
+          "pattern": "+66*",
+          "action": "include"
+        },
+        {
+          "type": "content",
+          "pattern": "*OTP*",
+          "action": "include"
+        }
+      ]
+    }
+  ]
+}
+

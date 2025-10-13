@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">SMS Hub Agent</string>
+    <string name="settings_title">Settings</string>
+    <string name="webhook_url_label">Webhook URL</string>
+    <string name="username_label">Username</string>
+    <string name="password_label">Password</string>
+    <string name="hmac_enabled_label">Enable HMAC Signature</string>
+    <string name="hmac_secret_label">HMAC Secret Key</string>
+    <string name="test_button">Test</string>
+    <string name="save_button">Save Configuration</string>
+    <string name="test_success">Test successful!</string>
+    <string name="test_failed">Test failed. Check logs.</string>
+    <string name="settings_saved">Settings saved successfully</string>
+    <string name="fill_required_fields">Please fill in all required fields</string>
+    <string name="sms_permission_required">SMS permission required</string>
+    <string name="grant_sms_permission">Please grant SMS permission to enable forwarding</string>
+</resources>
